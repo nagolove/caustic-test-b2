@@ -24,6 +24,8 @@
 #include "lua.h"
 #include "koh_lua_tools.h"
 
+static bool verbose = false;
+
 static MunitResult test_b2Vec2_tostr_alloc(
     const MunitParameter params[], void* data
 ) {
@@ -37,7 +39,8 @@ static MunitResult test_b2Vec2_tostr_alloc(
     char *str = b2Vec2_tostr_alloc(verts, num);
     munit_assert_not_null(str);
     if (str) {
-        printf("str %s\n", str);
+        if (verbose)
+            printf("str %s\n", str);
         
         lua_State *l = luaL_newstate();
         assert(l);
@@ -45,38 +48,35 @@ static MunitResult test_b2Vec2_tostr_alloc(
 
         const char *code = 
             "return function(s)\n"
-            //"assert(type(s) == 'string')\n"
-            //"print('hi')\n"
-            //"print('s', s)\n"
             "local ok, _ = string.match(s, \n"
             "'{.*1%.0.*1%.0.*}.*,.*' .. \n"
-            // FIXME: Следущие две строчки проверки не работают
-            "'{.*%-.*1%.0.*%-.*1%.0.*}.*,.*' \n"
-            //"'{.*%0%.0.*0%.0.*}.*,.*' ..\n"
-            //"'{.*34%.0.*34%.0.*}.*,.*'\n"
+            "'{.*%-.*1%.0.*%-.*1%.0.*}.*,.*' .. \n"
+            "'.*{.*0%.0.*}.*,.*' .. \n"
+            "'.*{.*34%.0.*0%.3434.*}.*,.*'\n"
             ")\n"
-            "print('ok', ok)\n"
             "return ok\n"
             "end\n";
             //"return CHECK\n";
 
-        printf("[%s]\n", stack_dump(l));
+        if (verbose)
+            printf("[%s]\n", stack_dump(l));
         int res = luaL_loadstring(l, code);
         if (res != LUA_OK) {
             printf("%s", lua_tostring(l, -1));
             exit(EXIT_FAILURE);
         }
         lua_call(l, 0, LUA_MULTRET);
-        printf("[%s]\n", stack_dump(l));
+        if (verbose)
+            printf("[%s]\n", stack_dump(l));
 
         lua_pushstring(l, str);
 
-        printf("[%s]\n", stack_dump(l));
-        //lua_pushvalue(l, -2);
-        //printf("[%s]\n", stack_dump(l));
+        if (verbose)
+            printf("[%s]\n", stack_dump(l));
         lua_call(l, 1, 1);
         munit_assert(lua_toboolean(l, -1) == true);
-        printf("[%s]\n", stack_dump(l));
+        if (verbose)
+            printf("[%s]\n", stack_dump(l));
         lua_close(l);
 
         free(str);
@@ -88,6 +88,14 @@ static MunitTest t_suite_common[] = {
     {
         .name =  (char*) "/test_b2Vec2_tostr_alloc",
         .test = test_b2Vec2_tostr_alloc,
+        .setup = NULL,
+        .tear_down = NULL,
+        .options = MUNIT_TEST_OPTION_NONE,
+        .parameters = NULL,
+    },
+    {
+        .name =  NULL,
+        .test = NULL,
         .setup = NULL,
         .tear_down = NULL,
         .options = MUNIT_TEST_OPTION_NONE,
