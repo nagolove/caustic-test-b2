@@ -1,3 +1,4 @@
+-I/home/nagolove/caustic/3rd_party/enkits/src
 -I/home/nagolove/caustic/3rd_party/pcre2/src
 -I/home/nagolove/caustic/3rd_party/cimgui
 -I/home/nagolove/caustic/3rd_party/cimgui/generator/output
