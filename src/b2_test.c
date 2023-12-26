@@ -30,6 +30,78 @@
 // }}}
 
 static bool verbose = false;
+extern bool b2_parallel;
+
+static MunitResult test_shapes_density_and_friction(
+    const MunitParameter params[], void* data
+) {
+    b2_parallel = false;
+    b2WorldDef world_def =  b2DefaultWorldDef();
+    world_def.gravity = b2Vec2_zero;
+
+    b2WorldId world = b2CreateWorld(&world_def);
+    int relax_iterations = 6;
+    int vel_iteratioins = 2;
+
+    for (int i = 0; i < 500; i++) {
+        b2Polygon poly = b2MakeSquare(50.);
+        float rnd = rand() / (double)RAND_MAX;
+        if (verbose)
+            trace("test_shapes_density_and_friction: rnd %f\n", rnd);
+        float w = 2. * (M_PI - rnd * M_PI * 2.);
+        const int32_t abs_linear_vel = 100;
+        b2Vec2 linear_vel = {
+            abs_linear_vel - rand() % (2 * abs_linear_vel),
+            abs_linear_vel - rand() % (2 * abs_linear_vel),
+        };
+
+        int width = 1920, height = 1080;
+        b2Vec2 pos = {
+            .x = rand() % width,
+            .y = rand() % height,
+        };
+
+        if (verbose)
+            printf(
+                "test_shapes_density_and_friction: "
+                "{ pos = %s, poly = %s, v = %s, w = %f, }\n",
+                b2Vec2_to_str(pos),
+                b2Polygon_to_str(&poly),
+                b2Vec2_to_str(linear_vel),
+                w
+            );
+
+        b2BodyDef body_def = b2DefaultBodyDef();
+        //body_def.isEnabled = true;
+        body_def.position = pos;
+        //body_def.isAwake = true;
+
+        const bool use_static = false;
+        if (use_static)
+            body_def.type = b2_staticBody;
+        else
+            body_def.type = b2_dynamicBody;
+
+        b2BodyId body = b2World_CreateBody(world, &body_def);
+        b2ShapeDef shape_def = b2DefaultShapeDef();
+        shape_def.density = 1.0;
+        shape_def.friction = 0.5;
+        b2Body_CreatePolygon(body, &shape_def, &poly);
+
+        //b2Body_SetLinearVelocity(body, linear_vel);
+        //b2Body_SetAngularVelocity(body, w);
+
+        //b2Body_Enable(body);
+    }
+
+    for (int i = 0; i < 100; i++) {
+        b2World_Step(world, 1. / 1000., vel_iteratioins, relax_iterations);
+    }
+
+    b2DestroyWorld(world);
+
+    return MUNIT_OK;
+}
 
 static MunitResult test_b2Statistics_to_str(
     const MunitParameter params[], void* data
@@ -204,6 +276,14 @@ static MunitResult test_b2Vec2_tostr_alloc(
 }
 
 static MunitTest t_suite_common[] = {
+    {
+        .name =  (char*) "/test_shapes_density_and_friction",
+        .test = test_shapes_density_and_friction,
+        .setup = NULL,
+        .tear_down = NULL,
+        .options = MUNIT_TEST_OPTION_NONE,
+        .parameters = NULL,
+    },
     {
         .name =  (char*) "/test_b2Vec2_tostr_alloc",
         .test = test_b2Vec2_tostr_alloc,
