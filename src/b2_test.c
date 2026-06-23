@@ -10,7 +10,6 @@
 #include "koh_common.h"
 #include "koh_metaloader.h"
 #include "koh_rand.h"
-#include "koh_set.h"
 #include "lauxlib.h"
 #include "lua.h"
 #include "lualib.h"
@@ -26,7 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lua.h"
-#include "koh_lua_tools.h"
 // }}}
 
 static bool verbose = false;
